@@ -27,49 +27,41 @@ public class FilmController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public Film create(@RequestBody @Valid Film film) {
-        try {
-            log.debug("Создается новый фильм: {}", film);
+        log.debug("Создается новый фильм: {}", film);
 
-            film.setId(getNextId());
-            films.put(film.getId(), film);
+        film.setId(getNextId());
+        films.put(film.getId(), film);
 
-            log.info("Фильм успешно создан: {}", film);
+        log.info("Фильм успешно создан: {}", film);
 
-            return film;
-        } catch (Exception e) {
-            log.error("Ошибка при создании фильма: {}", e.getMessage());
-            throw e;
-        }
+        return film;
     }
 
     @PutMapping
     public Film update(@RequestBody @Valid Film newFilm) {
-        try {
-            if (newFilm.getId() == null) {
-                log.warn("Ошибка валидации: ID не указан для обновления");
-                throw new ValidationException("ID должен быть указан");
-            }
 
-            if (films.containsKey(newFilm.getId())) {
-                log.debug("Обновление фильма с ID: {}", newFilm.getId());
-
-                Film oldFilm = films.get(newFilm.getId());
-                oldFilm.setName(newFilm.getName());
-                oldFilm.setDescription(newFilm.getDescription());
-                oldFilm.setReleaseDate(newFilm.getReleaseDate());
-                oldFilm.setDuration(newFilm.getDuration());
-
-                log.info("Фильм успешно обновлен: {}", oldFilm);
-
-                return oldFilm;
-            }
-
-            log.warn("Фильм с ID {} не найден", newFilm.getId());
-            throw new NotFoundException("Фильм с ID = " + newFilm.getId() + " не найден");
-        } catch (Exception e) {
-            log.error("Ошибка при обновлении фильма: {}", e.getMessage());
-            throw e;
+        if (newFilm.getId() == null) {
+            log.warn("Ошибка валидации: ID не указан для обновления");
+            throw new ValidationException("ID должен быть указан");
         }
+
+        if (films.containsKey(newFilm.getId())) {
+            log.debug("Обновление фильма с ID: {}", newFilm.getId());
+
+            Film oldFilm = films.get(newFilm.getId());
+            oldFilm.setName(newFilm.getName());
+            oldFilm.setDescription(newFilm.getDescription());
+            oldFilm.setReleaseDate(newFilm.getReleaseDate());
+            oldFilm.setDuration(newFilm.getDuration());
+
+            log.info("Фильм успешно обновлен: {}", oldFilm);
+
+            return oldFilm;
+        }
+
+        log.warn("Фильм с ID {} не найден", newFilm.getId());
+        throw new NotFoundException("Фильм с ID = " + newFilm.getId() + " не найден");
+
     }
 
     @DeleteMapping
