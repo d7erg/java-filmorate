@@ -14,6 +14,9 @@ target/
 !**/src/main/**/target/
 !**/src/test/**/target/
 
+### Файлы macOS ###
+.DS_Store
+
 ### STS ###
 .apt_generated
 .classpath
