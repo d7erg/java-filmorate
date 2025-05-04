@@ -43,17 +43,8 @@ public class FilmService {
 
     public void addLike(Long filmId, Long userId) {
         log.info("Добавление лайка пользователю {} для фильма {}", userId, filmId);
-        Film film = filmStorage.getFilm(filmId);
-        User user = userStorage.getUser(userId);
-
-        if (film == null) {
-            throw new NotFoundException("Фильм с ID " + filmId + " не найден");
-        }
-
-        if (user == null) {
-            throw new NotFoundException("Пользователь с ID " + userId + " не найден.");
-        }
-
+        Film film = validateFilm(filmId);
+        User user = validateUser(userId);
         film.addLike(userId);
         log.info("Лайк успешно добавлен пользователю {} для фильма {}", userId, filmId);
 
@@ -61,17 +52,8 @@ public class FilmService {
 
     public void removeLike(Long filmId, Long userId) {
         log.info("Удаление лайка пользователя {} для фильма {}", userId, filmId);
-        Film film = filmStorage.getFilm(filmId);
-        User user = userStorage.getUser(userId);
-
-        if (film == null) {
-            throw new NotFoundException("Фильм с ID " + filmId + " не найден");
-        }
-
-        if (user == null) {
-            throw new NotFoundException("Пользователь с ID " + userId + " не найден.");
-        }
-
+        Film film = validateFilm(filmId);
+        User user = validateUser(userId);
         film.removeLike(userId);
         log.info("Лайк удален у пользователя {} для фильма {}", userId, filmId);
     }
@@ -86,6 +68,22 @@ public class FilmService {
                 .sorted(Comparator.comparingInt(Film::getLikesCount).reversed())
                 .limit(count)
                 .collect(Collectors.toList());
+    }
+
+    private Film validateFilm(Long filmId) {
+        Film film = filmStorage.getFilm(filmId);
+        if (film == null) {
+            throw new NotFoundException("Фильм с ID " + filmId + " не найден");
+        }
+        return film;
+    }
+
+    private User validateUser(Long userId) {
+        User user = userStorage.getUser(userId);
+        if (user == null) {
+            throw new NotFoundException("Пользователь с ID " + userId + " не найден.");
+        }
+        return user;
     }
 
 }
