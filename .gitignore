@@ -14,7 +14,7 @@ target/
 !**/src/main/**/target/
 !**/src/test/**/target/
 
-### Файлы macOS ###
+### macOS ###
 .DS_Store
 
 ### STS ###

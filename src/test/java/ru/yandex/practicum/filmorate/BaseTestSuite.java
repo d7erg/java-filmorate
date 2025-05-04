@@ -32,6 +32,12 @@ public abstract class BaseTestSuite {
     @LocalServerPort
     protected int port;
 
+    protected User user;
+    protected User anotherUser;
+
+    protected Film film;
+    protected Film anotherFilm;
+
 
     @BeforeEach
     void setUp() {
