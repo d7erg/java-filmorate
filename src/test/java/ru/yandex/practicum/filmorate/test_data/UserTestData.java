@@ -1,4 +1,4 @@
-package ru.yandex.practicum.filmorate.controller.test_data;
+package ru.yandex.practicum.filmorate.test_data;
 
 import ru.yandex.practicum.filmorate.model.User;
 
@@ -14,6 +14,15 @@ public class UserTestData {
                 .login("valid_login")
                 .name("Valid User")
                 .birthday(LocalDate.of(2000, 1, 1))
+                .build();
+    }
+
+    public static User anotherValidUser() {
+        return User.builder()
+                .email("friend3@example.com")
+                .login("friend3_login")
+                .name("Friend Three") // если требуется
+                .birthday(LocalDate.of(1990, 1, 1)) // если требуется
                 .build();
     }
 

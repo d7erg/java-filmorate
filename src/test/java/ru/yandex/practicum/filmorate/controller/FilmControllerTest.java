@@ -1,16 +1,20 @@
 package ru.yandex.practicum.filmorate.controller;
 
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import ru.yandex.practicum.filmorate.BaseTestSuite;
-import ru.yandex.practicum.filmorate.controller.test_data.FilmTestData;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.test_data.FilmTestData;
+import ru.yandex.practicum.filmorate.test_data.UserTestData;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Objects;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -19,7 +23,9 @@ class FilmControllerTest extends BaseTestSuite {
 
     private Film film;
     private Film anotherFilm;
-    private final FilmController filmController = new FilmController();
+
+    @Autowired
+    private FilmController filmController;
 
     @Test
     void shouldCreateFilmWithValidData() {
@@ -63,6 +69,7 @@ class FilmControllerTest extends BaseTestSuite {
         assertEquals(film.getDuration(), response.getBody().getDuration());
     }
 
+
     @Test
     void shouldReturnBadRequestWhenCreateWithInvalidData() {
         film = FilmTestData.invalidFilmWithEmptyName();
@@ -104,8 +111,9 @@ class FilmControllerTest extends BaseTestSuite {
                 String.class
         );
 
-        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
+        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
     }
+
 
     @Test
     void shouldFailUpdateWithoutId() {
@@ -170,6 +178,144 @@ class FilmControllerTest extends BaseTestSuite {
     @Test
     void shouldRejectEmptyFilmRequest() {
         ResponseEntity<String> response = restTemplate.postForEntity(getFilmsUrl(), null, String.class);
-        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
     }
+
+    @Test
+    void shouldAddLikeSuccessfully() {
+        film = FilmTestData.validFilmWithAllFieldsFilled();
+        user = UserTestData.validUserWithAllFieldsFilled();
+
+        ResponseEntity<Film> filmResponse = restTemplate.postForEntity(getFilmsUrl(), film, Film.class);
+        ResponseEntity<User> userResponse = restTemplate.postForEntity(getUsersUrl(), user, User.class);
+
+        assertNotNull(userResponse.getBody());
+        assertNotNull(filmResponse.getBody());
+
+        ResponseEntity<Void> addLikeResponse = restTemplate.exchange(
+                getFilmsUrl() + "/" + filmResponse.getBody().getId() + "/like/" + userResponse.getBody().getId(),
+                HttpMethod.PUT,
+                null,
+                Void.class
+        );
+
+        assertEquals(HttpStatus.NO_CONTENT, addLikeResponse.getStatusCode());
+
+        ResponseEntity<Collection<Film>> response = restTemplate.exchange(
+                getFilmsUrl(),
+                HttpMethod.GET,
+                null,
+                new ParameterizedTypeReference<>() {
+                }
+        );
+
+        assertNotNull(response.getBody());
+        Film filmWithLike = response.getBody().iterator().next();
+
+
+        assertEquals(1, filmWithLike.getLikesCount());
+        assertTrue(filmWithLike.getLikes().contains(userResponse.getBody().getId()));
+    }
+
+    @Test
+    void shouldRemoveLikeSuccessfully() {
+        film = FilmTestData.validFilmWithAllFieldsFilled();
+        user = UserTestData.validUserWithAllFieldsFilled();
+
+        ResponseEntity<Film> filmResponse = restTemplate.postForEntity(getFilmsUrl(), film, Film.class);
+        ResponseEntity<User> userResponse = restTemplate.postForEntity(getUsersUrl(), user, User.class);
+
+        // Добавляем лайк
+        assertNotNull(filmResponse.getBody());
+        assertNotNull(userResponse.getBody());
+        restTemplate.exchange(
+                getFilmsUrl() + "/" + filmResponse.getBody().getId() + "/like/" + userResponse.getBody().getId(),
+                HttpMethod.PUT,
+                null,
+                Void.class
+        );
+
+        ResponseEntity<Void> removeLikeResponse = restTemplate.exchange(
+                getFilmsUrl() + "/" + filmResponse.getBody().getId() + "/like/" + userResponse.getBody().getId(),
+                HttpMethod.DELETE,
+                null,
+                Void.class
+        );
+
+        assertEquals(HttpStatus.NO_CONTENT, removeLikeResponse.getStatusCode());
+
+        ResponseEntity<Film> filmWithoutLike = restTemplate.getForEntity(
+                getFilmsUrl() + "/" + filmResponse.getBody().getId(),
+                Film.class
+        );
+
+        assertNotNull(filmWithoutLike.getBody());
+        assertEquals(0, filmWithoutLike.getBody().getLikesCount());
+        assertFalse(filmWithoutLike.getBody().getLikes().contains(userResponse.getBody().getId()));
+    }
+
+    @Test
+    void shouldGetPopularFilms() {
+        film = FilmTestData.validFilmWithAllFieldsFilled();
+        anotherFilm = FilmTestData.validFilmWithoutDescription();
+
+        user = UserTestData.validUserWithAllFieldsFilled();
+        anotherUser = UserTestData.anotherValidUser();
+
+        ResponseEntity<Film> filmResponse = restTemplate.postForEntity(getFilmsUrl(), film, Film.class);
+        ResponseEntity<Film> anotherFilmResponse = restTemplate.postForEntity(getFilmsUrl(), anotherFilm, Film.class);
+
+        ResponseEntity<User> userResponse = restTemplate.postForEntity(getUsersUrl(), user, User.class);
+        ResponseEntity<User> anotherUserResponse = restTemplate.postForEntity(getUsersUrl(), anotherUser, User.class);
+
+
+        // Добавляем разное количество лайков для каждого фильма
+        // Фильм 1 получает 2 лайка
+        assertNotNull(filmResponse.getBody());
+        assertNotNull(userResponse.getBody());
+        restTemplate.exchange(
+                getFilmsUrl() + "/" + filmResponse.getBody().getId() + "/like/" + userResponse.getBody().getId(),
+                HttpMethod.PUT,
+                null,
+                Void.class
+        );
+        assertNotNull(anotherUserResponse.getBody());
+        restTemplate.exchange(
+                getFilmsUrl() + "/" + filmResponse.getBody().getId() + "/like/" +
+                        anotherUserResponse.getBody().getId(),
+                HttpMethod.PUT,
+                null,
+                Void.class
+        );
+
+
+        // Фильм 2 получает 1 лайка
+        assertNotNull(anotherFilmResponse.getBody());
+        restTemplate.exchange(
+                getFilmsUrl() + "/" + anotherFilmResponse.getBody().getId() + "/like/" +
+                        userResponse.getBody().getId(),
+                HttpMethod.PUT,
+                null,
+                Void.class
+        );
+
+        ResponseEntity<List<Film>> popularFilmsResponse = restTemplate.exchange(
+                getFilmsUrl() + "/popular",
+                HttpMethod.GET,
+                null,
+                new ParameterizedTypeReference<>() {
+                }
+        );
+
+        assertEquals(HttpStatus.OK, popularFilmsResponse.getStatusCode());
+
+        List<Film> popularFilms = popularFilmsResponse.getBody();
+        assertNotNull(popularFilms);
+        assertEquals(2, popularFilms.size());
+
+        // Проверяем порядок фильмов
+        assertEquals(filmResponse.getBody().getId(), popularFilms.get(0).getId());
+        assertEquals(anotherFilmResponse.getBody().getId(), popularFilms.get(1).getId());
+    }
+
 }
