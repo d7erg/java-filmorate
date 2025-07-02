@@ -1,4 +1,4 @@
-package ru.yandex.practicum.filmorate.model;
+package ru.yandex.practicum.filmorate.model.film;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Positive;
@@ -29,6 +29,7 @@ public class Film {
     @Positive(message = "Продолжительность фильма должна быть положительным числом")
     private int duration;
 
+
     private final Set<Long> likes = new HashSet<>();
 
     public int getLikesCount() {
@@ -42,4 +43,9 @@ public class Film {
     public void removeLike(Long userId) {
         likes.remove(userId);
     }
+
+
+    private Set<Genre> genres;
+
+    private Mpa mpa;
 }

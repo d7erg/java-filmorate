@@ -2,6 +2,7 @@ package ru.yandex.practicum.filmorate.model;
 
 import org.junit.jupiter.api.Test;
 import ru.yandex.practicum.filmorate.BaseTestSuite;
+import ru.yandex.practicum.filmorate.model.film.Film;
 import ru.yandex.practicum.filmorate.test_data.FilmTestData;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;

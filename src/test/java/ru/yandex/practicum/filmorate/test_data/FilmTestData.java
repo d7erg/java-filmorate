@@ -1,6 +1,6 @@
 package ru.yandex.practicum.filmorate.test_data;
 
-import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.film.Film;
 
 import java.time.LocalDate;
 
