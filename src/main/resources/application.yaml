@@ -15,5 +15,6 @@ spring:
   output:
     ansi:
       enabled: ALWAYS
-
-
+  h2:
+    console:
+      enabled: false
