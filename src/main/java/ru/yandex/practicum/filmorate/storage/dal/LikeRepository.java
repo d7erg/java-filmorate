@@ -1,7 +1,6 @@
 package ru.yandex.practicum.filmorate.storage.dal;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.core.namedparam.SqlParameterSource;
@@ -12,8 +11,7 @@ import java.util.*;
 @Repository
 @RequiredArgsConstructor
 public class LikeRepository {
-    private final JdbcTemplate jdbc;
-    private final NamedParameterJdbcTemplate namedParameterJdbc;
+    private final NamedParameterJdbcTemplate jdbc;
 
     private static final String INSERT_LIKE = "INSERT INTO film_likes (film_id, user_id) VALUES (?, ?)";
     private static final String DELETE_LIKE = "DELETE FROM film_likes WHERE film_id = ? AND user_id = ?";
@@ -23,15 +21,15 @@ public class LikeRepository {
 
 
     public void addLike(Long filmId, Long userId) {
-        jdbc.update(INSERT_LIKE, filmId, userId);
+        jdbc.getJdbcOperations().update(INSERT_LIKE, filmId, userId);
     }
 
     public void removeLike(Long filmId, Long userId) {
-        jdbc.update(DELETE_LIKE, filmId, userId);
+        jdbc.getJdbcOperations().update(DELETE_LIKE, filmId, userId);
     }
 
     public Set<Long> getLikes(Long filmId) {
-        return new HashSet<>(jdbc.queryForList(FIND_LIKES_BY_FILM, Long.class, filmId));
+        return new HashSet<>(jdbc.getJdbcOperations().queryForList(FIND_LIKES_BY_FILM, Long.class, filmId));
     }
 
     public Map<Long, Set<Long>> findLikesForFilms(Set<Long> filmIds) {
@@ -41,7 +39,7 @@ public class LikeRepository {
 
         SqlParameterSource params = new MapSqlParameterSource("filmIds", filmIds);
 
-        return namedParameterJdbc.query(FIND_LIKES_FOR_FILMS, params, rs -> {
+        return jdbc.query(FIND_LIKES_FOR_FILMS, params, rs -> {
             Map<Long, Set<Long>> result = new HashMap<>();
             while (rs.next()) {
                 Long filmId = rs.getLong("film_id");
